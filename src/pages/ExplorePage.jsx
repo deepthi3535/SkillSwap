@@ -25,10 +25,7 @@ export default function ExplorePage() {
       .filter((u) => {
         if (search) {
           const q = search.toLowerCase();
-          const match =
-            u.name.toLowerCase().includes(q) ||
-            u.skillsTeach.some((s) => s.toLowerCase().includes(q)) ||
-            u.skillsLearn.some((s) => s.toLowerCase().includes(q));
+          const match = u.name.toLowerCase().includes(q) || u.skillsTeach.some((s) => s.toLowerCase().includes(q)) || u.skillsLearn.some((s) => s.toLowerCase().includes(q));
           if (!match) return false;
         }
         if (category && u.category !== category) return false;
@@ -40,38 +37,28 @@ export default function ExplorePage() {
       .sort((a, b) => b.matchPercentage - a.matchPercentage);
   }, [search, category, experience, location, learningMode]);
 
-  const clearFilters = () => {
-    setSearch('');
-    setCategory('');
-    setExperience('');
-    setLocation('');
-    setLearningMode('');
-  };
-
+  const clearFilters = () => { setSearch(''); setCategory(''); setExperience(''); setLocation(''); setLearningMode(''); };
   const hasFilters = search || category || experience || location || learningMode;
 
   return (
     <Layout dashboard>
       <div className="section-padding py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Explore & Find Matches</h1>
+        <div className="mb-6 animate-slide-up">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-accent-100/60 text-accent-700 rounded-full text-sm font-semibold mb-3">
+            🔍 Smart Matching
+          </div>
+          <h1 className="text-3xl font-extrabold text-gray-800 mb-2">Explore & Find Matches</h1>
           <p className="text-gray-600">Discover students with complementary skills to swap with.</p>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-8">
+        {/* Filters with glass effect */}
+        <div className="glass rounded-2xl p-5 mb-8 animate-slide-up stagger-1">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="lg:col-span-1">
               <label className="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Search</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-                <input
-                  type="text"
-                  placeholder="Name or skill..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="input-field pl-9"
-                />
+                <input type="text" placeholder="Name or skill..." value={search} onChange={(e) => setSearch(e.target.value)} className="input-field pl-9" />
               </div>
             </div>
             <div>
@@ -90,13 +77,7 @@ export default function ExplorePage() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Location</label>
-              <input
-                type="text"
-                placeholder="City..."
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="input-field"
-              />
+              <input type="text" placeholder="City..." value={location} onChange={(e) => setLocation(e.target.value)} className="input-field" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase mb-1.5">Mode</label>
@@ -106,13 +87,10 @@ export default function ExplorePage() {
               </select>
             </div>
           </div>
-
           {hasFilters && (
             <div className="mt-4 flex items-center justify-between">
               <p className="text-sm text-gray-500">{filteredUsers.length} result{filteredUsers.length !== 1 ? 's' : ''} found</p>
-              <button onClick={clearFilters} className="text-sm text-primary-600 font-medium hover:text-primary-700 transition-colors">
-                Clear all filters
-              </button>
+              <button onClick={clearFilters} className="text-sm text-primary-600 font-medium hover:text-primary-700 transition-colors link-underline">Clear all filters</button>
             </div>
           )}
         </div>
@@ -120,18 +98,18 @@ export default function ExplorePage() {
         {/* Results */}
         {filteredUsers.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredUsers.map((user) => (
-              <MatchCard key={user._id} user={user} matchPercentage={user.matchPercentage} />
+            {filteredUsers.map((user, idx) => (
+              <div key={user._id} className={`animate-slide-up stagger-${(idx % 4) + 1}`}>
+                <MatchCard user={user} matchPercentage={user.matchPercentage} />
+              </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-20">
-            <div className="text-6xl mb-4">🔍</div>
+          <div className="text-center py-20 animate-fade-in">
+            <div className="text-6xl mb-4 animate-bounce-soft">🔍</div>
             <h3 className="text-xl font-bold text-gray-800 mb-2">No matches found</h3>
             <p className="text-gray-600 mb-4">Try adjusting your filters to see more results.</p>
-            <button onClick={clearFilters} className="text-primary-600 font-semibold hover:text-primary-700 transition-colors">
-              Clear all filters
-            </button>
+            <button onClick={clearFilters} className="text-primary-600 font-semibold hover:text-primary-700 transition-colors link-underline">Clear all filters</button>
           </div>
         )}
       </div>

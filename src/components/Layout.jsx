@@ -4,7 +4,7 @@ import Footer from './layout/Footer';
 
 export default function Layout({ children, dashboard = false }) {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 via-white to-gray-50">
       {dashboard ? <DashboardNavbar /> : <Navbar />}
       <main className="flex-1">{children}</main>
       <Footer />
