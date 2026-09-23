@@ -18,9 +18,7 @@ export default function ProfilePage() {
 
   const handleSkillToggle = (type, skill) => {
     const list = editData[type];
-    const updated = list.includes(skill)
-      ? list.filter((s) => s !== skill)
-      : [...list, skill];
+    const updated = list.includes(skill) ? list.filter((s) => s !== skill) : [...list, skill];
     setEditData({ ...editData, [type]: updated });
   };
 
@@ -33,17 +31,16 @@ export default function ProfilePage() {
     <Layout dashboard>
       <div className="section-padding py-8">
         {/* Profile header */}
-        <Card className="mb-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-r from-primary-500 to-accent-500"></div>
+        <Card className="mb-8 relative overflow-hidden animate-slide-up">
+          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-r from-primary-500 via-accent-500 to-primary-500 bg-[length:200%_100%] animate-gradient-x"></div>
+          {/* Decorative circles */}
+          <div className="absolute top-4 right-8 w-16 h-16 border border-white/20 rounded-full"></div>
+          <div className="absolute top-8 right-24 w-8 h-8 border border-white/20 rounded-full"></div>
           <div className="relative pt-16">
             <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
-              <img
-                src={user.avatar}
-                alt={user.name}
-                className="w-28 h-28 rounded-2xl object-cover ring-4 ring-white shadow-lg"
-              />
+              <img src={user.avatar} alt={user.name} className="w-28 h-28 rounded-2xl object-cover ring-4 ring-white shadow-lg" />
               <div className="flex-1 sm:pb-2">
-                <h1 className="text-2xl font-bold text-gray-800">{user.name}</h1>
+                <h1 className="text-2xl font-extrabold text-gray-800">{user.name}</h1>
                 <p className="text-gray-600">{user.college} · {user.location}</p>
                 <div className="flex items-center gap-3 mt-2">
                   <StarRating rating={user.rating} size="sm" />
@@ -60,12 +57,12 @@ export default function ProfilePage() {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left column */}
           <div className="space-y-6">
-            <Card>
+            <Card className="animate-slide-up stagger-1">
               <h3 className="font-bold text-gray-800 mb-4">About Me</h3>
               <p className="text-gray-600 text-sm leading-relaxed">{user.bio}</p>
             </Card>
 
-            <Card>
+            <Card className="animate-slide-up stagger-2">
               <h3 className="font-bold text-gray-800 mb-4">Details</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
@@ -94,7 +91,7 @@ export default function ProfilePage() {
 
           {/* Right column */}
           <div className="lg:col-span-2 space-y-6">
-            <Card>
+            <Card className="animate-slide-up stagger-3">
               <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">🌱 Skills I Can Teach</h3>
               <div className="flex flex-wrap gap-2">
                 {user.skillsTeach.map((s) => (
@@ -103,7 +100,7 @@ export default function ProfilePage() {
               </div>
             </Card>
 
-            <Card>
+            <Card className="animate-slide-up stagger-4">
               <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">🎯 Skills I Want to Learn</h3>
               <div className="flex flex-wrap gap-2">
                 {user.skillsLearn.map((s) => (
@@ -112,13 +109,13 @@ export default function ProfilePage() {
               </div>
             </Card>
 
-            <Card>
+            <Card className="animate-slide-up stagger-5">
               <h3 className="font-bold text-gray-800 mb-4">Reviews</h3>
               <div className="space-y-4">
                 {mockReviews.map((review) => (
                   <div key={review._id} className="border-b border-gray-50 last:border-0 pb-4 last:pb-0">
                     <div className="flex items-center gap-3 mb-2">
-                      <img src={review.reviewer.avatar} alt={review.reviewer.name} className="w-10 h-10 rounded-full" />
+                      <img src={review.reviewer.avatar} alt={review.reviewer.name} className="w-10 h-10 rounded-full ring-2 ring-primary-100" />
                       <div>
                         <p className="font-semibold text-gray-800 text-sm">{review.reviewer.name}</p>
                         <StarRating rating={review.rating} size="sm" />
@@ -139,13 +136,7 @@ export default function ProfilePage() {
         <div className="space-y-5">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Bio</label>
-            <textarea
-              name="bio"
-              rows={3}
-              value={editData.bio}
-              onChange={handleEditChange}
-              className="input-field resize-none"
-            />
+            <textarea name="bio" rows={3} value={editData.bio} onChange={handleEditChange} className="input-field resize-none" />
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
@@ -188,11 +179,7 @@ export default function ProfilePage() {
             />
             <div className="flex flex-wrap gap-2 mt-2">
               {editData.skillsTeach.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => handleSkillToggle('skillsTeach', s)}
-                  className="badge bg-green-100 text-green-700 hover:bg-red-100 hover:text-red-600 transition-colors"
-                >
+                <button key={s} onClick={() => handleSkillToggle('skillsTeach', s)} className="badge bg-green-100 text-green-700 hover:bg-red-100 hover:text-red-600 transition-all duration-200 hover:scale-105">
                   {s} ✕
                 </button>
               ))}
@@ -217,11 +204,7 @@ export default function ProfilePage() {
             />
             <div className="flex flex-wrap gap-2 mt-2">
               {editData.skillsLearn.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => handleSkillToggle('skillsLearn', s)}
-                  className="badge bg-purple-100 text-purple-700 hover:bg-red-100 hover:text-red-600 transition-colors"
-                >
+                <button key={s} onClick={() => handleSkillToggle('skillsLearn', s)} className="badge bg-purple-100 text-purple-700 hover:bg-red-100 hover:text-red-600 transition-all duration-200 hover:scale-105">
                   {s} ✕
                 </button>
               ))}

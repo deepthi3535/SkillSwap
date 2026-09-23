@@ -33,8 +33,8 @@ export default function UserProfilePage() {
   if (!user) {
     return (
       <Layout dashboard>
-        <div className="section-padding py-20 text-center">
-          <div className="text-6xl mb-4">😕</div>
+        <div className="section-padding py-20 text-center animate-fade-in">
+          <div className="text-6xl mb-4 animate-bounce-soft">😕</div>
           <h1 className="text-2xl font-bold text-gray-800 mb-2">User Not Found</h1>
           <p className="text-gray-600 mb-6">This profile may have been removed or is no longer available.</p>
           <Button to="/explore" variant="secondary">Back to Explore</Button>
@@ -46,35 +46,28 @@ export default function UserProfilePage() {
   const match = calculateMatch(user);
 
   const handleSendRequest = () => {
-    // Placeholder — API integration via swapAPI.sendRequest({ toUserId: user._id, offeredSkill: offerSkill, requestedSkill: requestSkill })
     setSent(true);
-    setTimeout(() => {
-      setSwapModalOpen(false);
-      setSent(false);
-      navigate('/requests');
-    }, 1500);
+    setTimeout(() => { setSwapModalOpen(false); setSent(false); navigate('/requests'); }, 1500);
   };
 
   return (
     <Layout dashboard>
       <div className="section-padding py-8">
         {/* Back link */}
-        <Link to="/explore" className="inline-flex items-center gap-1 text-gray-500 hover:text-primary-600 transition-colors mb-6 text-sm font-medium">
+        <Link to="/explore" className="inline-flex items-center gap-1 text-gray-500 hover:text-primary-600 transition-colors mb-6 text-sm font-medium link-underline">
           ← Back to Explore
         </Link>
 
         {/* Profile header */}
-        <Card className="mb-8 relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-r from-primary-500 to-accent-500"></div>
+        <Card className="mb-8 relative overflow-hidden animate-slide-up">
+          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-r from-primary-500 via-accent-500 to-primary-500 bg-[length:200%_100%] animate-gradient-x"></div>
+          <div className="absolute top-4 right-8 w-16 h-16 border border-white/20 rounded-full"></div>
+          <div className="absolute top-8 right-24 w-8 h-8 border border-white/20 rounded-full"></div>
           <div className="relative pt-16">
             <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
-              <img
-                src={user.avatar}
-                alt={user.name}
-                className="w-28 h-28 rounded-2xl object-cover ring-4 ring-white shadow-lg"
-              />
+              <img src={user.avatar} alt={user.name} className="w-28 h-28 rounded-2xl object-cover ring-4 ring-white shadow-lg" />
               <div className="flex-1 sm:pb-2">
-                <h1 className="text-2xl font-bold text-gray-800">{user.name}</h1>
+                <h1 className="text-2xl font-extrabold text-gray-800">{user.name}</h1>
                 <p className="text-gray-600">{user.college} · {user.location}</p>
                 <div className="flex items-center gap-3 mt-2">
                   <StarRating rating={user.rating} size="sm" />
@@ -89,17 +82,18 @@ export default function UserProfilePage() {
         </Card>
 
         {/* Match analysis */}
-        <Card className="mb-6 bg-gradient-to-br from-primary-50 to-accent-50 border-primary-100">
-          <div className="flex items-center gap-6">
+        <Card className="mb-6 bg-gradient-to-br from-primary-50 to-accent-50 border-primary-100 animate-slide-up stagger-1">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
             <div className="text-center shrink-0">
-              <div className="relative w-24 h-24">
+              <div className="relative w-24 h-24 group">
                 <svg className="w-24 h-24 transform -rotate-90">
                   <circle cx="48" cy="48" r="40" stroke="#e0e7ff" strokeWidth="8" fill="none" />
                   <circle
                     cx="48" cy="48" r="40"
-                    stroke="#4f46e5" strokeWidth="8" fill="none"
+                    stroke="#6366f1" strokeWidth="8" fill="none"
                     strokeDasharray={`${(match.percentage / 100) * 251.2} 251.2`}
                     strokeLinecap="round"
+                    className="transition-all duration-1000 ease-spring"
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -136,13 +130,12 @@ export default function UserProfilePage() {
         </Card>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left */}
           <div className="space-y-6">
-            <Card>
+            <Card className="animate-slide-up stagger-2">
               <h3 className="font-bold text-gray-800 mb-4">About</h3>
               <p className="text-gray-600 text-sm leading-relaxed">{user.bio}</p>
             </Card>
-            <Card>
+            <Card className="animate-slide-up stagger-3">
               <h3 className="font-bold text-gray-800 mb-4">Details</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
@@ -169,9 +162,8 @@ export default function UserProfilePage() {
             </Card>
           </div>
 
-          {/* Right */}
           <div className="lg:col-span-2 space-y-6">
-            <Card>
+            <Card className="animate-slide-up stagger-4">
               <h3 className="font-bold text-gray-800 mb-4">🌱 Skills They Can Teach</h3>
               <div className="flex flex-wrap gap-2">
                 {user.skillsTeach.map((s) => (
@@ -179,7 +171,7 @@ export default function UserProfilePage() {
                 ))}
               </div>
             </Card>
-            <Card>
+            <Card className="animate-slide-up stagger-5">
               <h3 className="font-bold text-gray-800 mb-4">🎯 Skills They Want to Learn</h3>
               <div className="flex flex-wrap gap-2">
                 {user.skillsLearn.map((s) => (
@@ -194,8 +186,8 @@ export default function UserProfilePage() {
       {/* Swap request modal */}
       <Modal open={swapModalOpen} onClose={() => setSwapModalOpen(false)} title="Send Swap Request">
         {sent ? (
-          <div className="text-center py-8">
-            <div className="text-5xl mb-4">✅</div>
+          <div className="text-center py-8 animate-scale-in">
+            <div className="text-5xl mb-4 animate-bounce-soft">✅</div>
             <h3 className="text-xl font-bold text-gray-800 mb-2">Request Sent!</h3>
             <p className="text-gray-600">Your swap request has been sent to {user.name}.</p>
           </div>
@@ -221,18 +213,12 @@ export default function UserProfilePage() {
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Message (optional)</label>
-              <textarea
-                rows={3}
-                placeholder="Introduce yourself and describe what you'd like to learn..."
-                className="input-field resize-none"
-              />
+              <textarea rows={3} placeholder="Introduce yourself and describe what you'd like to learn..." className="input-field resize-none" />
             </div>
 
             <div className="flex justify-end gap-3">
               <Button variant="ghost" onClick={() => setSwapModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleSendRequest} disabled={!offerSkill || !requestSkill}>
-                Send Request
-              </Button>
+              <Button onClick={handleSendRequest} disabled={!offerSkill || !requestSkill}>Send Request</Button>
             </div>
           </div>
         )}
