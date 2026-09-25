@@ -20,13 +20,24 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000',
+  process.env.FRONTEND_URL,
   process.env.CLIENT_ORIGIN,
 ].filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      // Allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin) return callback(null, true);
+
+      const isAllowed =
+        process.env.NODE_ENV !== 'production' ||
+        allowedOrigins.includes(origin) ||
+        (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL.replace(/\/+$/, '')) ||
+        origin.endsWith('.vercel.app');
+
+      if (isAllowed) {
         return callback(null, true);
       }
       return callback(new Error('Not allowed by CORS'));
@@ -80,7 +91,7 @@ connectDB().then(async () => {
     console.log('[SkillSwap Server] Auto-seeding initial database...');
     await seedDB(false);
   }
-  app.listen(PORT, () => {
-    console.log(`[SkillSwap Server] Running on http://localhost:${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`[SkillSwap Server] Running on http://0.0.0.0:${PORT} (port ${PORT})`);
   });
 });

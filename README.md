@@ -226,13 +226,27 @@ cd ..
 
 ## 14. Environment Variables
 
-Create a `.env` file inside the `backend/` directory using `backend/.env.example` as a template:
+### Backend (`backend/.env`)
+Create a `.env` file inside the `backend/` directory using `backend/.env.example`:
 
 ```env
 PORT=5000
 MONGO_URI=mongodb+srv://<username>:<password>@cluster0.example.mongodb.net/skillswap?retryWrites=true&w=majority
 JWT_SECRET=your_super_secret_jwt_key
 NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
+```
+In Render production, set `FRONTEND_URL` to your Vercel deployment URL (e.g. `https://skillswap.vercel.app`).
+
+### Frontend (`.env`)
+Create a `.env` file in the root directory using `.env.example`:
+
+```env
+# Local development
+VITE_API_URL=http://localhost:5000/api
+
+# Production (Vercel)
+# VITE_API_URL=https://your-backend-name.onrender.com/api
 ```
 
 *(Note: Sensitive keys and `.env` files are ignored by `.gitignore` and must never be committed.)*
