@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Card from '../components/ui/Card';
 import SkillBadge from '../components/ui/SkillBadge';
@@ -10,6 +10,7 @@ import { mockActiveSwaps } from '../data/mockData';
 import { swapAPI, reviewAPI } from '../services/api';
 
 export default function ActiveSwapsPage() {
+  const navigate = useNavigate();
   const [swaps, setSwaps] = useState(mockActiveSwaps);
   const [loading, setLoading] = useState(true);
   const [reviewModal, setReviewModal] = useState(null);
@@ -19,6 +20,12 @@ export default function ActiveSwapsPage() {
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
+    const token = localStorage.getItem('skillswap_token');
+    if (!token || token === 'null' || token === 'undefined') {
+      navigate('/login');
+      return;
+    }
+
     async function loadActiveSwaps() {
       setLoading(true);
       try {
@@ -34,13 +41,18 @@ export default function ActiveSwapsPage() {
         }
       } catch (err) {
         console.warn('Backend active swaps fetch error, using local state');
+        if (err.response?.status === 401) {
+          localStorage.removeItem('skillswap_token');
+          localStorage.removeItem('skillswap_user');
+          navigate('/login');
+        }
       } finally {
         setLoading(false);
       }
     }
 
     loadActiveSwaps();
-  }, []);
+  }, [navigate]);
 
   const handleMarkCompleted = (swap) => {
     setReviewModal(swap);

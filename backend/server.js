@@ -38,8 +38,8 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
+// Root & Health check endpoints
+app.get(['/', '/api/health'], (req, res) => {
   return res.status(200).json({
     success: true,
     message: 'SkillSwap API is running',

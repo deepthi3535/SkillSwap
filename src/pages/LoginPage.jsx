@@ -18,7 +18,10 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const res = await authAPI.login(formData);
+      const res = await authAPI.login({
+        email: (formData.email || '').trim(),
+        password: formData.password,
+      });
       if (res.data.success || res.data.token) {
         if (res.data.token) {
           localStorage.setItem('skillswap_token', res.data.token);

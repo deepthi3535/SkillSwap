@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Card from '../components/ui/Card';
 import SkillBadge from '../components/ui/SkillBadge';
@@ -8,12 +8,19 @@ import { mockIncomingRequests, mockSentRequests } from '../data/mockData';
 import { swapAPI } from '../services/api';
 
 export default function RequestsPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('incoming');
   const [incoming, setIncoming] = useState(mockIncomingRequests);
   const [sent, setSent] = useState(mockSentRequests);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const token = localStorage.getItem('skillswap_token');
+    if (!token || token === 'null' || token === 'undefined') {
+      navigate('/login');
+      return;
+    }
+
     async function loadRequests() {
       setLoading(true);
       try {
@@ -28,13 +35,18 @@ export default function RequestsPage() {
         }
       } catch (err) {
         console.warn('Backend requests fetch error, using local state');
+        if (err.response?.status === 401) {
+          localStorage.removeItem('skillswap_token');
+          localStorage.removeItem('skillswap_user');
+          navigate('/login');
+        }
       } finally {
         setLoading(false);
       }
     }
 
     loadRequests();
-  }, []);
+  }, [navigate]);
 
   const handleAccept = async (id) => {
     try {

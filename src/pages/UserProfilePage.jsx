@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Button from '../components/ui/Button';

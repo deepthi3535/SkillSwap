@@ -18,7 +18,19 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      const res = await authAPI.register(formData);
+      const payload = {
+        name: (formData.fullName || '').trim(),
+        fullName: (formData.fullName || '').trim(),
+        email: (formData.email || '').trim(),
+        password: formData.password,
+        college: (formData.college || '').trim(),
+        location: (formData.location || '').trim(),
+        skillsTeach: ['JavaScript', 'HTML/CSS'],
+        skillsLearn: ['React', 'Python'],
+        experience: 'Intermediate',
+        learningMode: 'Online',
+      };
+      const res = await authAPI.register(payload);
       if (res.data.success || res.data.token) {
         if (res.data.token) {
           localStorage.setItem('skillswap_token', res.data.token);
@@ -32,8 +44,8 @@ export default function RegisterPage() {
       }
     } catch (err) {
       console.error('Registration error:', err);
-      setError(err.response?.data?.message || 'Failed to connect to backend server. Directing to login...');
-      setTimeout(() => navigate('/login'), 1500);
+      const serverMsg = err.response?.data?.message || err.message || 'Registration failed. Please check your details and try again.';
+      setError(serverMsg);
     } finally {
       setLoading(false);
     }

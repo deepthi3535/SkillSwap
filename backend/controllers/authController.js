@@ -27,14 +27,27 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    const {
+      skillsTeach,
+      skillsLearn,
+      experience,
+      availability,
+      learningMode,
+      category,
+    } = req.body;
+
     const user = await User.create({
       name: userName,
       email: email.toLowerCase(),
       password: hashedPassword,
       college: college || '',
       location: location || '',
-      skillsTeach: ['JavaScript', 'HTML/CSS'],
-      skillsLearn: ['React', 'Python'],
+      skillsTeach: Array.isArray(skillsTeach) && skillsTeach.length > 0 ? skillsTeach : ['JavaScript', 'HTML/CSS'],
+      skillsLearn: Array.isArray(skillsLearn) && skillsLearn.length > 0 ? skillsLearn : ['React', 'Python'],
+      experience: experience || 'Intermediate',
+      availability: Array.isArray(availability) && availability.length > 0 ? availability : ['Weekends', 'Evenings'],
+      learningMode: learningMode || 'Online',
+      category: category || 'Programming',
     });
 
     const token = generateToken(user._id);

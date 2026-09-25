@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
@@ -9,6 +10,7 @@ import { currentUser as defaultUser, mockReviews, EXPERIENCE_LEVELS, LEARNING_MO
 import { userAPI, reviewAPI } from '../services/api';
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(defaultUser);
   const [reviews, setReviews] = useState(mockReviews);
   const [editOpen, setEditOpen] = useState(false);
@@ -16,6 +18,12 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    const token = localStorage.getItem('skillswap_token');
+    if (!token || token === 'null' || token === 'undefined') {
+      navigate('/login');
+      return;
+    }
+
     async function loadProfile() {
       try {
         const res = await userAPI.getProfile();
@@ -36,11 +44,16 @@ export default function ProfilePage() {
         }
       } catch (err) {
         console.warn('Backend profile fetch error, using local state');
+        if (err.response?.status === 401) {
+          localStorage.removeItem('skillswap_token');
+          localStorage.removeItem('skillswap_user');
+          navigate('/login');
+        }
       }
     }
 
     loadProfile();
-  }, []);
+  }, [navigate]);
 
   const handleEditChange = (e) => {
     setEditData({ ...editData, [e.target.name]: e.target.value });

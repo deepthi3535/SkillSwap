@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 import SwapRequest from '../models/SwapRequest.js';

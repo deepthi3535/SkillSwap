@@ -14,15 +14,17 @@ const colorMap = {
 const colors = Object.keys(colorMap);
 
 function getColor(skill) {
+  const str = typeof skill === 'string' ? skill : String(skill || '');
   let hash = 0;
-  for (let i = 0; i < skill.length; i++) {
-    hash = skill.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
   return colors[Math.abs(hash) % colors.length];
 }
 
 export default function SkillBadge({ skill, type = 'teach', size = 'md', className = '' }) {
-  const color = colorMap[getColor(skill)];
+  const label = typeof skill === 'string' ? skill : (skill?.name || String(skill || ''));
+  const color = colorMap[getColor(label)] || colorMap.blue;
   const sizes = {
     sm: 'px-2.5 py-0.5 text-xs',
     md: 'px-3 py-1 text-xs',

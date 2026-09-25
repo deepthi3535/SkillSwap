@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import StatCard from '../components/ui/StatCard';
 import MatchCard from '../components/MatchCard';
@@ -14,6 +14,7 @@ const quickActions = [
 ];
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(defaultUser);
   const [matches, setMatches] = useState([]);
   const [stats, setStats] = useState({
@@ -24,15 +25,27 @@ export default function DashboardPage() {
 
   useEffect(() => {
     let isMounted = true;
+    const token = localStorage.getItem('skillswap_token');
+    if (!token || token === 'null' || token === 'undefined') {
+      navigate('/login');
+      return;
+    }
 
     async function loadDashboardData() {
       try {
         const profileRes = await userAPI.getProfile();
         if (isMounted && profileRes.data?.user) {
           setUser(profileRes.data.user);
+          localStorage.setItem('skillswap_user', JSON.stringify(profileRes.data.user));
         }
       } catch (err) {
         console.warn('Backend server profile fetch error:', err?.message);
+        if (err.response?.status === 401) {
+          localStorage.removeItem('skillswap_token');
+          localStorage.removeItem('skillswap_user');
+          navigate('/login');
+          return;
+        }
       }
 
       try {
@@ -70,9 +83,9 @@ export default function DashboardPage() {
 
     loadDashboardData();
     return () => { isMounted = false; };
-  }, []);
+  }, [navigate]);
 
-  const safeUser = user || defaultUser;
+  const safeUser = user || defaultUser || {};
   const userName = safeUser.name ? safeUser.name.split(' ')[0] : 'Student';
   const skillsTeachCount = Array.isArray(safeUser.skillsTeach) ? safeUser.skillsTeach.length : 0;
   const skillsLearnCount = Array.isArray(safeUser.skillsLearn) ? safeUser.skillsLearn.length : 0;

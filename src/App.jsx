@@ -22,6 +22,7 @@ function App() {
         <Route path="/users/:id" element={<UserProfilePage />} />
         <Route path="/requests" element={<RequestsPage />} />
         <Route path="/swaps" element={<ActiveSwapsPage />} />
+        <Route path="/active-swaps" element={<ActiveSwapsPage />} />
       </Routes>
     </BrowserRouter>
   );

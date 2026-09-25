@@ -1,4 +1,4 @@
-import { Link, useNavigate, useLocation } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
 export default function DashboardNavbar() {
@@ -12,9 +12,9 @@ export default function DashboardNavbar() {
       const stored = localStorage.getItem('skillswap_user');
       if (stored) {
         const u = JSON.parse(stored);
-        if (u.name) {
-          const parts = u.name.split(' ');
-          const init = parts.map((p) => p[0]).join('').substring(0, 2).toUpperCase();
+        if (u && u.name && typeof u.name === 'string') {
+          const parts = u.name.trim().split(/\s+/).filter(Boolean);
+          const init = parts.map((p) => p[0] || '').join('').substring(0, 2).toUpperCase() || 'SS';
           setInitials(init);
         }
       }
