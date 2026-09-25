@@ -32,15 +32,19 @@ export default function DashboardPage() {
           setUser(profileRes.data.user);
         }
       } catch (err) {
-        console.warn('Backend server not connected or offline, using current session');
+        console.warn('Backend server profile fetch error:', err?.message);
       }
 
       try {
         const matchesRes = await userAPI.getMatches();
-        if (isMounted && (matchesRes.data?.matches || matchesRes.data?.data)) {
-          const list = matchesRes.data.matches || matchesRes.data.data;
-          setMatches(list);
-          setStats((prev) => ({ ...prev, totalMatches: list.length }));
+        if (isMounted && matchesRes.data) {
+          const list = matchesRes.data.matches || matchesRes.data.data || matchesRes.data.users || [];
+          if (Array.isArray(list) && list.length > 0) {
+            setMatches(list);
+            setStats((prev) => ({ ...prev, totalMatches: list.length }));
+          } else {
+            setMatches(mockUsers.map((u, i) => ({ ...u, matchPercentage: [92, 85, 88, 78][i] || 80 })));
+          }
         } else {
           setMatches(mockUsers.map((u, i) => ({ ...u, matchPercentage: [92, 85, 88, 78][i] || 80 })));
         }
@@ -51,8 +55,8 @@ export default function DashboardPage() {
       try {
         const swapsRes = await swapAPI.getSwaps();
         if (isMounted && swapsRes.data) {
-          const incoming = swapsRes.data.incoming || [];
-          const active = swapsRes.data.active || [];
+          const incoming = Array.isArray(swapsRes.data.incoming) ? swapsRes.data.incoming : [];
+          const active = Array.isArray(swapsRes.data.active) ? swapsRes.data.active : [];
           setStats((prev) => ({
             ...prev,
             pendingRequests: incoming.filter((r) => r.status === 'pending').length,
@@ -68,7 +72,14 @@ export default function DashboardPage() {
     return () => { isMounted = false; };
   }, []);
 
-  const displayMatches = matches.length > 0 ? matches.slice(0, 4) : mockUsers.slice(0, 4).map((u, i) => ({ ...u, matchPercentage: [92, 85, 88, 78][i] }));
+  const safeUser = user || defaultUser;
+  const userName = safeUser.name ? safeUser.name.split(' ')[0] : 'Student';
+  const skillsTeachCount = Array.isArray(safeUser.skillsTeach) ? safeUser.skillsTeach.length : 0;
+  const skillsLearnCount = Array.isArray(safeUser.skillsLearn) ? safeUser.skillsLearn.length : 0;
+
+  const displayMatches = Array.isArray(matches) && matches.length > 0
+    ? matches.slice(0, 4)
+    : mockUsers.slice(0, 4).map((u, i) => ({ ...u, matchPercentage: [92, 85, 88, 78][i] || 80 }));
 
   return (
     <Layout dashboard>
@@ -80,7 +91,7 @@ export default function DashboardPage() {
             Active Now
           </div>
           <h1 className="text-3xl font-extrabold text-gray-800 mb-2">
-            Welcome back, {user.name ? user.name.split(' ')[0] : 'Student'}! <span className="inline-block animate-wiggle">👋</span>
+            Welcome back, {userName}! <span className="inline-block animate-wiggle">👋</span>
           </h1>
           <p className="text-gray-600">Here's what's happening with your skill swaps today.</p>
         </div>
@@ -88,8 +99,8 @@ export default function DashboardPage() {
         {/* Stats with staggered animation */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
           {[
-            { icon: '🌱', label: 'Skills I Teach', value: user.skillsTeach ? user.skillsTeach.length : 0, color: 'green', i: 1 },
-            { icon: '🎯', label: 'Skills I Want', value: user.skillsLearn ? user.skillsLearn.length : 0, color: 'primary', i: 2 },
+            { icon: '🌱', label: 'Skills I Teach', value: skillsTeachCount, color: 'green', i: 1 },
+            { icon: '🎯', label: 'Skills I Want', value: skillsLearnCount, color: 'primary', i: 2 },
             { icon: '🤝', label: 'Potential Matches', value: stats.totalMatches, color: 'accent', i: 3 },
             { icon: '⏳', label: 'Pending Requests', value: stats.pendingRequests, color: 'orange', i: 4 },
             { icon: '🚀', label: 'Active Swaps', value: stats.activeSwaps, color: 'purple', i: 5 },
