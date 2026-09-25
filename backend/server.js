@@ -85,13 +85,18 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 
 // Connect DB & start server
-connectDB().then(async () => {
-  const userCount = await User.countDocuments();
-  if (userCount === 0) {
-    console.log('[SkillSwap Server] Auto-seeding initial database...');
-    await seedDB(false);
-  }
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[SkillSwap Server] Running on http://0.0.0.0:${PORT} (port ${PORT})`);
+connectDB()
+  .then(async () => {
+    const userCount = await User.countDocuments();
+    if (userCount === 0) {
+      console.log('[SkillSwap Server] Auto-seeding initial database...');
+      await seedDB(false);
+    }
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`[SkillSwap Server] Running on http://0.0.0.0:${PORT} (port ${PORT})`);
+    });
+  })
+  .catch((err) => {
+    console.error('[SkillSwap Server Startup Error]:', err.message);
+    process.exit(1);
   });
-});

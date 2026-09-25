@@ -47,7 +47,7 @@ const runTests = async () => {
   try {
     const uri = process.env.MONGO_URI;
     console.log('\n--- Checking MongoDB Atlas Database Connection ---');
-    console.log(`URI target: ${uri ? uri.replace(/:([^@]+)@/, ':****@') : 'UNDEFINED'}`);
+    console.log('Validating MONGO_URI configuration...');
     
     // Connect to check Atlas directly
     await mongoose.connect(uri, { serverSelectionTimeoutMS: 8000 });
