@@ -21,12 +21,13 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor — handle errors
+// Response interceptor — handle errors & session expiration
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('skillswap_token');
+      localStorage.removeItem('skillswap_user');
     }
     return Promise.reject(error);
   }
@@ -43,20 +44,29 @@ export const authAPI = {
 export const userAPI = {
   getAll: (params) => api.get('/users', { params }),
   getById: (id) => api.get(`/users/${id}`),
+  getProfile: () => api.get('/users/profile'),
   updateProfile: (data) => api.put('/users/profile', data),
-  getMatches: () => api.get('/users/matches'),
+  getMatches: (params) => api.get('/matches', { params }),
 };
 
 // --- Swaps ---
 export const swapAPI = {
-  sendRequest: (data) => api.post('/swaps/request', data),
+  sendRequest: (data) => api.post('/swaps', data),
+  getSwaps: () => api.get('/swaps'),
   getIncoming: () => api.get('/swaps/incoming'),
   getSent: () => api.get('/swaps/sent'),
+  getActive: () => api.get('/swaps/active'),
   accept: (id) => api.put(`/swaps/${id}/accept`),
   reject: (id) => api.put(`/swaps/${id}/reject`),
-  getActive: () => api.get('/swaps/active'),
   complete: (id) => api.put(`/swaps/${id}/complete`),
+  cancel: (id) => api.put(`/swaps/${id}/cancel`),
   submitReview: (data) => api.post('/swaps/review', data),
+};
+
+// --- Reviews ---
+export const reviewAPI = {
+  create: (data) => api.post('/reviews', data),
+  getUserReviews: (userId) => api.get(`/reviews/user/${userId}`),
 };
 
 export default api;

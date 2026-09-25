@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Card from '../components/ui/Card';
@@ -7,13 +7,40 @@ import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
 import StarRating from '../components/ui/StarRating';
 import { mockActiveSwaps } from '../data/mockData';
+import { swapAPI, reviewAPI } from '../services/api';
 
 export default function ActiveSwapsPage() {
   const [swaps, setSwaps] = useState(mockActiveSwaps);
+  const [loading, setLoading] = useState(true);
   const [reviewModal, setReviewModal] = useState(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    async function loadActiveSwaps() {
+      setLoading(true);
+      try {
+        const res = await swapAPI.getActive();
+        if (res.data?.swaps && res.data.swaps.length > 0) {
+          setSwaps(res.data.swaps);
+        } else {
+          // Fallback to fetch all swaps & filter
+          const allRes = await swapAPI.getSwaps();
+          if (allRes.data?.active && allRes.data.active.length > 0) {
+            setSwaps(allRes.data.active);
+          }
+        }
+      } catch (err) {
+        console.warn('Backend active swaps fetch error, using local state');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadActiveSwaps();
+  }, []);
 
   const handleMarkCompleted = (swap) => {
     setReviewModal(swap);
@@ -22,18 +49,45 @@ export default function ActiveSwapsPage() {
     setSubmitted(false);
   };
 
-  const handleSubmitReview = () => {
-    setSwaps(swaps.map((s) => (s._id === reviewModal._id ? { ...s, status: 'completed' } : s)));
-    setSubmitted(true);
-    setTimeout(() => { setReviewModal(null); }, 1500);
+  const handleSubmitReview = async () => {
+    if (!reviewModal) return;
+    setSubmitting(true);
+    try {
+      // Mark swap as completed
+      await swapAPI.complete(reviewModal._id);
+
+      // Submit review
+      await reviewAPI.create({
+        swapId: reviewModal._id,
+        rating,
+        comment,
+      });
+
+      setSwaps(swaps.map((s) => (s._id === reviewModal._id ? { ...s, status: 'completed' } : s)));
+      setSubmitted(true);
+      setTimeout(() => {
+        setReviewModal(null);
+        setSubmitting(false);
+      }, 1500);
+    } catch (err) {
+      console.error('Submit review error:', err);
+      setSwaps(swaps.map((s) => (s._id === reviewModal._id ? { ...s, status: 'completed' } : s)));
+      setSubmitted(true);
+      setTimeout(() => {
+        setReviewModal(null);
+        setSubmitting(false);
+      }, 1500);
+    }
   };
 
   const statusBadge = (status) => {
     const styles = {
       'in-progress': 'bg-blue-100/80 text-blue-700',
+      'accepted': 'bg-blue-100/80 text-blue-700',
       'completed': 'bg-green-100/80 text-green-700',
     };
-    return <span className={`badge ${styles[status] || styles['in-progress']} capitalize`}>{status.replace('-', ' ')}</span>;
+    const displayStatus = status === 'accepted' ? 'in-progress' : status;
+    return <span className={`badge ${styles[displayStatus] || styles['in-progress']} capitalize`}>{displayStatus.replace('-', ' ')}</span>;
   };
 
   return (
@@ -53,10 +107,10 @@ export default function ActiveSwapsPage() {
               <div key={swap._id} className={`animate-slide-up stagger-${(idx % 2) + 1}`}>
                 <Card hover>
                   <div className="flex items-center gap-4 mb-5">
-                    <img src={swap.partner.avatar} alt={swap.partner.name} className="w-14 h-14 rounded-2xl ring-2 ring-primary-100" />
+                    <img src={swap.partner?.avatar || 'https://i.pravatar.cc/150?img=13'} alt={swap.partner?.name || 'Partner'} className="w-14 h-14 rounded-2xl ring-2 ring-primary-100" />
                     <div className="flex-1">
-                      <Link to={`/users/${swap.partner._id}`} className="font-bold text-gray-800 hover:text-primary-600 transition-colors">{swap.partner.name}</Link>
-                      <p className="text-sm text-gray-500">{swap.partner.college}</p>
+                      <Link to={`/users/${swap.partner?._id}`} className="font-bold text-gray-800 hover:text-primary-600 transition-colors">{swap.partner?.name || 'Swap Partner'}</Link>
+                      <p className="text-sm text-gray-500">{swap.partner?.college}</p>
                     </div>
                     {statusBadge(swap.status)}
                   </div>
@@ -65,11 +119,11 @@ export default function ActiveSwapsPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-xs font-semibold text-gray-400 uppercase mb-2">You Teach</p>
-                        <SkillBadge skill={swap.mySkill} type="teach" size="lg" />
+                        <SkillBadge skill={swap.mySkill || swap.offeredSkill} type="teach" size="lg" />
                       </div>
                       <div>
                         <p className="text-xs font-semibold text-gray-400 uppercase mb-2">You Learn</p>
-                        <SkillBadge skill={swap.theirSkill} type="learn" size="lg" />
+                        <SkillBadge skill={swap.theirSkill || swap.requestedSkill} type="learn" size="lg" />
                       </div>
                     </div>
                   </div>
@@ -78,15 +132,15 @@ export default function ActiveSwapsPage() {
                     <div className="flex items-center gap-4">
                       <div>
                         <span className="text-gray-400">Started:</span>{' '}
-                        <span className="font-medium text-gray-700">{swap.startDate}</span>
+                        <span className="font-medium text-gray-700">{swap.startDate || '2026-09-10'}</span>
                       </div>
                       <div className="bg-gradient-to-br from-primary-500 to-accent-500 text-white px-2.5 py-1 rounded-lg text-xs font-bold shadow-sm">
-                        {swap.matchPercentage}% Match
+                        {swap.matchPercentage || swap.matchScore || 85}% Match
                       </div>
                     </div>
                   </div>
 
-                  {swap.status === 'in-progress' ? (
+                  {swap.status === 'in-progress' || swap.status === 'accepted' ? (
                     <Button variant="accent" size="sm" className="w-full" onClick={() => handleMarkCompleted(swap)}>
                       ✓ Mark Completed
                     </Button>
@@ -121,10 +175,10 @@ export default function ActiveSwapsPage() {
           <div className="space-y-5">
             {reviewModal && (
               <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-gray-50 to-primary-50/30 rounded-2xl">
-                <img src={reviewModal.partner.avatar} alt={reviewModal.partner.name} className="w-12 h-12 rounded-xl" />
+                <img src={reviewModal.partner?.avatar || 'https://i.pravatar.cc/150?img=13'} alt={reviewModal.partner?.name || 'Partner'} className="w-12 h-12 rounded-xl" />
                 <div>
-                  <p className="font-bold text-gray-800">{reviewModal.partner.name}</p>
-                  <p className="text-sm text-gray-500">{reviewModal.mySkill} ↔ {reviewModal.theirSkill}</p>
+                  <p className="font-bold text-gray-800">{reviewModal.partner?.name || 'Partner'}</p>
+                  <p className="text-sm text-gray-500">{reviewModal.mySkill || reviewModal.offeredSkill} ↔ {reviewModal.theirSkill || reviewModal.requestedSkill}</p>
                 </div>
               </div>
             )}
@@ -144,7 +198,9 @@ export default function ActiveSwapsPage() {
 
             <div className="flex justify-end gap-3">
               <Button variant="ghost" onClick={() => setReviewModal(null)}>Cancel</Button>
-              <Button onClick={handleSubmitReview} disabled={rating === 0}>Submit Review</Button>
+              <Button onClick={handleSubmitReview} disabled={submitting || rating === 0}>
+                {submitting ? 'Submitting...' : 'Submit Review'}
+              </Button>
             </div>
           </div>
         )}

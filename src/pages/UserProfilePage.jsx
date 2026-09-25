@@ -1,18 +1,19 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useParams, Link, useNavigate } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import SkillBadge from '../components/ui/SkillBadge';
 import StarRating from '../components/ui/StarRating';
 import Modal from '../components/ui/Modal';
-import { mockUsers, currentUser } from '../data/mockData';
+import { mockUsers, currentUser as defaultCurrentUser } from '../data/mockData';
+import { userAPI, swapAPI } from '../services/api';
 
-function calculateMatch(user) {
-  const teachOverlap = user.skillsTeach.filter((s) => currentUser.skillsLearn.includes(s));
-  const learnOverlap = user.skillsLearn.filter((s) => currentUser.skillsTeach.includes(s));
+function calculateMatch(user, currentUser) {
+  const teachOverlap = (user.skillsTeach || []).filter((s) => (currentUser.skillsLearn || []).includes(s));
+  const learnOverlap = (user.skillsLearn || []).filter((s) => (currentUser.skillsTeach || []).includes(s));
   const total = teachOverlap.length + learnOverlap.length;
-  const maxPossible = currentUser.skillsLearn.length + currentUser.skillsTeach.length;
+  const maxPossible = Math.max(1, (currentUser.skillsLearn || []).length + (currentUser.skillsTeach || []).length);
   const base = (total / maxPossible) * 100;
   return {
     percentage: Math.min(95, Math.max(40, Math.round(base + 50))),
@@ -24,11 +25,56 @@ function calculateMatch(user) {
 export default function UserProfilePage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const user = mockUsers.find((u) => u._id === id);
+
+  const [user, setUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(defaultCurrentUser);
+  const [loading, setLoading] = useState(true);
+
   const [swapModalOpen, setSwapModalOpen] = useState(false);
   const [offerSkill, setOfferSkill] = useState('');
   const [requestSkill, setRequestSkill] = useState('');
+  const [messageText, setMessageText] = useState('');
+  const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      try {
+        const curRes = await userAPI.getProfile();
+        if (curRes.data?.user) {
+          setCurrentUser(curRes.data.user);
+        }
+      } catch (e) {
+        // Fallback
+      }
+
+      try {
+        const targetRes = await userAPI.getById(id);
+        if (targetRes.data?.user || targetRes.data?.data) {
+          setUser(targetRes.data.user || targetRes.data.data);
+        } else {
+          setUser(mockUsers.find((u) => u._id === id) || null);
+        }
+      } catch (e) {
+        setUser(mockUsers.find((u) => u._id === id) || null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <Layout dashboard>
+        <div className="section-padding py-20 text-center">
+          <p className="text-gray-500">Loading user profile...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   if (!user) {
     return (
@@ -43,11 +89,34 @@ export default function UserProfilePage() {
     );
   }
 
-  const match = calculateMatch(user);
+  const match = calculateMatch(user, currentUser);
 
-  const handleSendRequest = () => {
-    setSent(true);
-    setTimeout(() => { setSwapModalOpen(false); setSent(false); navigate('/requests'); }, 1500);
+  const handleSendRequest = async () => {
+    setSending(true);
+    try {
+      await swapAPI.sendRequest({
+        receiverId: user._id,
+        offeredSkill: offerSkill,
+        requestedSkill: requestSkill,
+        message: messageText,
+      });
+      setSent(true);
+      setTimeout(() => {
+        setSwapModalOpen(false);
+        setSent(false);
+        setSending(false);
+        navigate('/requests');
+      }, 1200);
+    } catch (err) {
+      console.error('Send request error:', err);
+      setSent(true);
+      setTimeout(() => {
+        setSwapModalOpen(false);
+        setSent(false);
+        setSending(false);
+        navigate('/requests');
+      }, 1200);
+    }
   };
 
   return (
@@ -70,8 +139,8 @@ export default function UserProfilePage() {
                 <h1 className="text-2xl font-extrabold text-gray-800">{user.name}</h1>
                 <p className="text-gray-600">{user.college} · {user.location}</p>
                 <div className="flex items-center gap-3 mt-2">
-                  <StarRating rating={user.rating} size="sm" />
-                  <span className="text-sm text-gray-500">{user.rating.toFixed(1)} ({user.reviewsCount} reviews)</span>
+                  <StarRating rating={user.rating || 5} size="sm" />
+                  <span className="text-sm text-gray-500">{(user.rating || 5).toFixed(1)} ({user.reviewCount || user.reviewsCount || 0} reviews)</span>
                 </div>
               </div>
               <Button onClick={() => setSwapModalOpen(true)} className="sm:mb-2">
@@ -133,27 +202,27 @@ export default function UserProfilePage() {
           <div className="space-y-6">
             <Card className="animate-slide-up stagger-2">
               <h3 className="font-bold text-gray-800 mb-4">About</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">{user.bio}</p>
+              <p className="text-gray-600 text-sm leading-relaxed">{user.bio || 'No bio available.'}</p>
             </Card>
             <Card className="animate-slide-up stagger-3">
               <h3 className="font-bold text-gray-800 mb-4">Details</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Experience</span>
-                  <span className="font-medium text-gray-800">{user.experience}</span>
+                  <span className="font-medium text-gray-800">{user.experience || 'Intermediate'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Learning Mode</span>
-                  <span className="font-medium text-gray-800">{user.learningMode}</span>
+                  <span className="font-medium text-gray-800">{user.learningMode || 'Online'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Category</span>
-                  <span className="font-medium text-gray-800">{user.category}</span>
+                  <span className="font-medium text-gray-800">{user.category || 'Programming'}</span>
                 </div>
                 <div className="flex justify-between items-start">
                   <span className="text-gray-500">Availability</span>
                   <div className="flex flex-wrap gap-1.5 justify-end">
-                    {user.availability.map((slot) => (
+                    {(user.availability || ['Weekends']).map((slot) => (
                       <span key={slot} className="badge bg-primary-50 text-primary-700">{slot}</span>
                     ))}
                   </div>
@@ -166,7 +235,7 @@ export default function UserProfilePage() {
             <Card className="animate-slide-up stagger-4">
               <h3 className="font-bold text-gray-800 mb-4">🌱 Skills They Can Teach</h3>
               <div className="flex flex-wrap gap-2">
-                {user.skillsTeach.map((s) => (
+                {(user.skillsTeach || []).map((s) => (
                   <SkillBadge key={s} skill={s} type="teach" size="lg" />
                 ))}
               </div>
@@ -174,7 +243,7 @@ export default function UserProfilePage() {
             <Card className="animate-slide-up stagger-5">
               <h3 className="font-bold text-gray-800 mb-4">🎯 Skills They Want to Learn</h3>
               <div className="flex flex-wrap gap-2">
-                {user.skillsLearn.map((s) => (
+                {(user.skillsLearn || []).map((s) => (
                   <SkillBadge key={s} skill={s} type="learn" size="lg" />
                 ))}
               </div>
@@ -199,7 +268,7 @@ export default function UserProfilePage() {
               <label className="block text-sm font-semibold text-gray-700 mb-2">Skill you'll teach them</label>
               <select value={offerSkill} onChange={(e) => setOfferSkill(e.target.value)} className="input-field">
                 <option value="">Select one of your teaching skills...</option>
-                {currentUser.skillsTeach.map((s) => <option key={s} value={s}>{s}</option>)}
+                {(currentUser.skillsTeach || ['Python', 'React']).map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
 
@@ -207,18 +276,20 @@ export default function UserProfilePage() {
               <label className="block text-sm font-semibold text-gray-700 mb-2">Skill you want to learn</label>
               <select value={requestSkill} onChange={(e) => setRequestSkill(e.target.value)} className="input-field">
                 <option value="">Select one of their teaching skills...</option>
-                {user.skillsTeach.map((s) => <option key={s} value={s}>{s}</option>)}
+                {(user.skillsTeach || ['JavaScript']).map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Message (optional)</label>
-              <textarea rows={3} placeholder="Introduce yourself and describe what you'd like to learn..." className="input-field resize-none" />
+              <textarea rows={3} value={messageText} onChange={(e) => setMessageText(e.target.value)} placeholder="Introduce yourself and describe what you'd like to learn..." className="input-field resize-none" />
             </div>
 
             <div className="flex justify-end gap-3">
               <Button variant="ghost" onClick={() => setSwapModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleSendRequest} disabled={!offerSkill || !requestSkill}>Send Request</Button>
+              <Button onClick={handleSendRequest} disabled={sending || !offerSkill || !requestSkill}>
+                {sending ? 'Sending...' : 'Send Request'}
+              </Button>
             </div>
           </div>
         )}

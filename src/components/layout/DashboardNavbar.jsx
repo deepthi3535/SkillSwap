@@ -1,10 +1,27 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function DashboardNavbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [initials, setInitials] = useState('AV');
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('skillswap_user');
+      if (stored) {
+        const u = JSON.parse(stored);
+        if (u.name) {
+          const parts = u.name.split(' ');
+          const init = parts.map((p) => p[0]).join('').substring(0, 2).toUpperCase();
+          setInitials(init);
+        }
+      }
+    } catch (e) {
+      // fallback
+    }
+  }, []);
 
   const links = [
     { label: 'Dashboard', to: '/dashboard' },
@@ -16,6 +33,7 @@ export default function DashboardNavbar() {
 
   const handleLogout = () => {
     localStorage.removeItem('skillswap_token');
+    localStorage.removeItem('skillswap_user');
     navigate('/');
   };
 
@@ -52,7 +70,7 @@ export default function DashboardNavbar() {
 
           <div className="hidden md:flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-400 to-accent-400 flex items-center justify-center text-white font-semibold text-sm shadow-md hover:scale-110 transition-transform duration-200">
-              AV
+              {initials}
             </div>
             <button onClick={handleLogout} className="px-4 py-2 text-gray-600 font-medium hover:text-red-500 transition-colors text-sm">
               Logout

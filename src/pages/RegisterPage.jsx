@@ -2,18 +2,41 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Button from '../components/ui/Button';
+import { authAPI } from '../services/api';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ fullName: '', email: '', password: '', college: '', location: '' });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => { setLoading(false); navigate('/login'); }, 1000);
+    setError('');
+
+    try {
+      const res = await authAPI.register(formData);
+      if (res.data.success || res.data.token) {
+        if (res.data.token) {
+          localStorage.setItem('skillswap_token', res.data.token);
+        }
+        if (res.data.user) {
+          localStorage.setItem('skillswap_user', JSON.stringify(res.data.user));
+        }
+        navigate('/dashboard');
+      } else {
+        setError(res.data.message || 'Registration failed');
+      }
+    } catch (err) {
+      console.error('Registration error:', err);
+      setError(err.response?.data?.message || 'Failed to connect to backend server. Directing to login...');
+      setTimeout(() => navigate('/login'), 1500);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -37,6 +60,11 @@ export default function RegisterPage() {
           </div>
 
           <div className="glass rounded-3xl p-8">
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-xl text-sm font-medium">
+                {error}
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid sm:grid-cols-2 gap-5">
                 <div>
