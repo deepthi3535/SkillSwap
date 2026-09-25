@@ -145,9 +145,45 @@ When a swap reaches `completed` status:
 
 ```
 SkillSwap/
+├── frontend/
+│   ├── public/                   # Static public assets (vite.svg, etc.)
+│   ├── src/
+│   │   ├── assets/               # Visual assets and SVGs
+│   │   ├── components/
+│   │   │   ├── layout/           # Navbar, DashboardNavbar, Footer
+│   │   │   ├── ui/               # Button, Card, Modal, SkillBadge, StatCard, StarRating
+│   │   │   ├── Layout.jsx        # Main application layout wrapper
+│   │   │   └── MatchCard.jsx     # Reusable skill matching display card
+│   │   ├── data/
+│   │   │   └── mockData.js       # Development fallback definitions
+│   │   ├── pages/
+│   │   │   ├── LandingPage.jsx   # Public landing page
+│   │   │   ├── LoginPage.jsx     # User login form
+│   │   │   ├── RegisterPage.jsx  # User registration form
+│   │   │   ├── DashboardPage.jsx # Student dashboard with stats & matches
+│   │   │   ├── ExplorePage.jsx   # Search & filter directory of peers
+│   │   │   ├── ProfilePage.jsx   # User profile management & edit modal
+│   │   │   ├── UserProfilePage.jsx# Public peer profile & swap modal
+│   │   │   ├── RequestsPage.jsx  # Manage incoming and sent swap requests
+│   │   │   └── ActiveSwapsPage.jsx# Ongoing swaps tracker and reviews
+│   │   ├── services/
+│   │   │   └── api.js            # Axios client with JWT interceptors
+│   │   ├── App.jsx               # React Router configuration
+│   │   ├── index.css             # Tailwind design tokens & utilities
+│   │   └── main.jsx              # React application entry point
+│   ├── .env.example              # Frontend environment template
+│   ├── eslint.config.js          # ESLint configuration
+│   ├── index.html                # HTML entry template
+│   ├── package.json              # Frontend dependencies and scripts
+│   ├── package-lock.json
+│   ├── postcss.config.js         # PostCSS configuration
+│   ├── tailwind.config.js        # Tailwind CSS configuration
+│   ├── vercel.json               # Vercel SPA client-side route rewrites
+│   └── vite.config.js            # Vite bundler configuration
+│
 ├── backend/
 │   ├── config/
-│   │   └── db.js                 # MongoDB Atlas connection & configuration
+│   │   └── db.js                 # MongoDB Atlas connection (Mongoose)
 │   ├── controllers/
 │   │   ├── authController.js     # User registration, login & profile
 │   │   ├── userController.js     # User directory, profile updates
@@ -167,52 +203,31 @@ SkillSwap/
 │   │   ├── swapRoutes.js
 │   │   └── reviewRoutes.js
 │   ├── seed/
-│   │   └── seedData.js           # Sample users and mock skill records
+│   │   └── seedData.js           # Database auto-seeder
 │   ├── utils/
 │   │   └── matchingAlgorithm.js  # Skill compatibility calculator
-│   ├── .env.example
-│   ├── package.json
-│   └── server.js                 # Main Express server entry point
-├── public/                       # Static public assets
-├── src/
-│   ├── assets/                   # Images and styles
-│   ├── components/
-│   │   ├── layout/               # Navbar, DashboardNavbar, Footer
-│   │   ├── ui/                   # Button, Card, Modal, SkillBadge, StatCard, StarRating
-│   │   ├── Layout.jsx
-│   │   └── MatchCard.jsx
-│   ├── data/
-│   │   └── mockData.js           # Development fallback definitions
-│   ├── pages/
-│   │   ├── LandingPage.jsx       # Public landing page
-│   │   ├── LoginPage.jsx         # User login form
-│   │   ├── RegisterPage.jsx      # User registration form
-│   │   ├── DashboardPage.jsx     # Main student dashboard
-│   │   ├── ExplorePage.jsx       # Discover and filter peer learners
-│   │   ├── ProfilePage.jsx       # View and edit personal profile
-│   │   ├── UserProfilePage.jsx   # Public profile view for other peers
-│   │   ├── RequestsPage.jsx      # Manage incoming & sent swap requests
-│   │   └── ActiveSwapsPage.jsx   # Manage ongoing swaps and reviews
-│   ├── services/
-│   │   └── api.js                # Axios instance and API call services
-│   ├── App.jsx                   # React Router routing setup
-│   ├── index.css                 # Tailwind design tokens and custom styles
-│   └── main.jsx                  # React application entry point
-├── index.html
-├── package.json
-├── tailwind.config.js
-└── vite.config.js
+│   ├── test-integration.js       # Backend integration test suite
+│   ├── test-e2e-flow.js          # End-to-end integration test script
+│   ├── .env.example              # Backend environment template
+│   ├── package.json              # Backend dependencies and scripts
+│   ├── package-lock.json
+│   └── server.js                 # Express server entry point (0.0.0.0:5000)
+│
+├── .gitignore                    # Root Git ignore rules (protects all .env files)
+└── README.md                     # Comprehensive project documentation
 ```
 
 ---
 
 ## 13. Installation
 
-Clone the repository and install dependencies for both the frontend and backend:
+Clone the repository and install dependencies separately for the frontend and backend:
 
-### 1. Root & Frontend Dependencies
+### 1. Frontend Dependencies
 ```bash
+cd frontend
 npm install
+cd ..
 ```
 
 ### 2. Backend Dependencies
@@ -227,7 +242,7 @@ cd ..
 ## 14. Environment Variables
 
 ### Backend (`backend/.env`)
-Create a `.env` file inside the `backend/` directory using `backend/.env.example`:
+Create a `.env` file inside `backend/` using `backend/.env.example`:
 
 ```env
 PORT=5000
@@ -236,26 +251,25 @@ JWT_SECRET=your_super_secret_jwt_key
 NODE_ENV=development
 FRONTEND_URL=http://localhost:3000
 ```
-In Render production, set `FRONTEND_URL` to your Vercel deployment URL (e.g. `https://skillswap.vercel.app`).
 
-### Frontend (`.env`)
-Create a `.env` file in the root directory using `.env.example`:
+### Frontend (`frontend/.env`)
+Create a `.env` file inside `frontend/` using `frontend/.env.example`:
 
 ```env
-# Local development
+# Local development:
 VITE_API_URL=http://localhost:5000/api
 
-# Production (Vercel)
-# VITE_API_URL=https://your-backend-name.onrender.com/api
+# Production (Vercel deployment):
+# VITE_API_URL=https://skillswap-backend-psor.onrender.com/api
 ```
 
 *(Note: Sensitive keys and `.env` files are ignored by `.gitignore` and must never be committed.)*
 
 ---
 
-## 15. Running the Project
+## 15. Running the Project Locally
 
-Run both backend and frontend servers:
+Run both backend and frontend servers in separate terminals:
 
 ### Terminal 1: Backend Server (Port 5000)
 ```bash
@@ -266,13 +280,42 @@ Backend API will be accessible at: `http://localhost:5000`
 
 ### Terminal 2: Frontend App (Port 3000)
 ```bash
+cd frontend
 npm run dev
 ```
 Frontend Web Application will be accessible at: `http://localhost:3000`
 
 ---
 
-## 16. API Overview
+## 16. Deployment Guide
+
+### Frontend → Vercel
+- **Root Directory**: `frontend`
+- **Framework Preset**: `Vite`
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+- **Environment Variables**:
+  - `VITE_API_URL` = `https://skillswap-backend-psor.onrender.com/api`
+- **SPA Routing**: Handled automatically by `frontend/vercel.json` rewrites.
+
+### Backend → Render
+- **Root Directory**: `backend`
+- **Environment**: `Node`
+- **Build Command**: `npm install`
+- **Start Command**: `npm start`
+- **Environment Variables**:
+  - `MONGO_URI` = `mongodb+srv://...`
+  - `JWT_SECRET` = `<secret>`
+  - `NODE_ENV` = `production`
+  - `FRONTEND_URL` = `https://<your-app>.vercel.app`
+
+### Database → MongoDB Atlas
+- Cloud-hosted replica set cluster.
+- Network Access: Allow access from Render IP addresses (`0.0.0.0/0` recommended for dynamic cloud hosts).
+
+---
+
+## 17. API Overview
 
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :---: |
@@ -299,7 +342,7 @@ Frontend Web Application will be accessible at: `http://localhost:3000`
 
 ---
 
-## 17. Testing
+## 18. Testing
 
 ### Run Backend Integration Test Suite
 ```bash
